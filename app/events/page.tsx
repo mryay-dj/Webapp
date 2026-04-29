@@ -1,3 +1,4 @@
+"use client";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Image from "next/image";
 import TableOne from "@/components/Tables/TableOne";
@@ -34,7 +35,7 @@ const events = () => {
       <Breadcrumb pageName="Events" />
       <div className="mx-auto max-w-270">
       <div className="grid grid-cols-1 items-center justify-center">
-  <Dropdown options={options} title="Location" />
+  <Dropdown options={options} title="Location" onChange= {() => {}}/>
 
 
 </div>

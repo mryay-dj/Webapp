@@ -9,7 +9,6 @@
         "lint": "next lint"
     },
     "dependencies": {
-      
         "@react-jvectormap/core": "^1.0.4",
         "@react-jvectormap/unitedstates": "^1.0.1",
         "@types/chart.js": "^2.9.41",
@@ -48,6 +47,7 @@
         "typescript": "5.1.6"
     },
     "devDependencies": {
-        "@types/react": "^18.2.48"
+        "@types/react": "^18.2.48",
+        "@types/react-gauge-chart": "^0.5.0"
     }
 }

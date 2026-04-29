@@ -52,7 +52,9 @@ const LinearGaugeChart: React.FC<LinearGaugeChartProps> = ({ data }) => {
     },
   };
 
-  return <ReactFC {...chartConfigs} />;
+  const FC = ReactFC as any;
+
+  return <FC {...chartConfigs} />;
 };
 
 export default LinearGaugeChart;
