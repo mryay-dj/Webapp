@@ -1,0 +1,84 @@
+import { useState } from 'react';
+import { API_KEY, URL } from "../hooks/config";
+import moment from 'moment';
+
+interface Item {
+  Anomalies: string[];
+  Anomaly_Count: string;
+  id: number;
+  Recorded_Time: string;
+  Active_Cams: number;
+  Cam_ID: string;
+  People_Count: string;
+  High: number,
+  Low: number,
+  Status: string,
+  Seven_Five: number,
+  Updated_Time: string,
+  Two_Five: number,
+  Location: string,
+  X_Coordinates: number[];
+  Y_Coordinates: number[];
+}
+
+interface FetchDataResult {
+  latestRecord: Item | null;
+}
+
+const getData = async (endpoint: string, selectedCamera: string): Promise<FetchDataResult> => {
+  try {
+    // Calculate the Recorded_Time with current time - 5 minutes
+    const currentTimeMinus10Seconds = moment().subtract(10, 'seconds').format('YYYY-MM-DD HH:mm:ss');
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'X-API-KEY': API_KEY,
+      },
+      body: JSON.stringify({
+        operationName: 'listCameraData',
+        query: `
+          query listCameraData {
+            listCameraData (filter: {Cam_ID: {eq: "${selectedCamera}" }, Recorded_Time: {ge: "${currentTimeMinus10Seconds}"}}, limit: 10000) {
+              items {
+                Anomalies
+                Anomaly_Count
+                id
+                Recorded_Time
+                Active_Cams
+                Cam_ID
+                People_Count
+                Status
+                X_Coordinates
+                Y_Coordinates
+                High
+                Low
+                Location
+                Two_Five
+                Updated_Time
+                Seven_Five
+              }
+            }
+          }
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    const fetchedData = responseData?.data?.listCameraData?.items || [];
+    const sortedData = [...fetchedData].sort((a, b) => b.id - a.id);
+    const latestRecord = sortedData.length > 0 ? sortedData[0] : null;
+
+    return { latestRecord };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return { latestRecord: null };
+  }
+};
+
+export default getData;
