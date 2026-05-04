@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const { latestRecord } = await getData(endpoint, "Camer1");
+      const { latestRecord } = await getData(endpoint, "Camera 1");
       setLatestRecord(latestRecord);
       
     }
@@ -96,7 +96,7 @@ const Dashboard: React.FC = () => {
 <br></br>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
   
-        <CardDataStats title="People" total =  "47" rate= {`${latestRecord?.Recorded_Time || getCurrentTimestamp() } EST`}>
+        <CardDataStats title="People" total = {latestRecord?.People_Count || "47"} rate= {`${latestRecord?.Recorded_Time || getCurrentTimestamp() } EST`}>
           
         <svg
   className="fill-primary dark:fill-white"

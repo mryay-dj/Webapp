@@ -40,7 +40,7 @@ const getData = async (endpoint: string, selectedCamera: string): Promise<FetchD
         operationName: 'listCameraData',
         query: `
           query listCameraData {
-            listCameraData (filter: {Cam_ID: {eq: "${selectedCamera}" }, Recorded_Time: {ge: "${currentTimeMinus10Seconds}"}}, limit: 10000) {
+            listCameraData (filter: {Cam_ID: {eq: "${selectedCamera}"}}, limit: 10000) {
               items {
                 Anomalies
                 Anomaly_Count
@@ -70,7 +70,14 @@ const getData = async (endpoint: string, selectedCamera: string): Promise<FetchD
     }
 
     const responseData = await response.json();
-    const fetchedData = responseData?.data?.listCameraData?.items || [];
+    const fetchedData = (responseData?.data?.listCameraData?.items || []).map((item: any) => ({
+      ...item,
+      X_Coordinates: item.X_Coordinates?.map((x: string) => Number(x)) || [],
+      Y_Coordinates: item.Y_Coordinates?.map((y: string) => Number(y)) || [],
+    }));
+
+    console.log("RAW AWS DATA:", fetchedData);
+
     const sortedData = [...fetchedData].sort((a, b) => b.id - a.id);
     const latestRecord = sortedData.length > 0 ? sortedData[0] : null;
 
@@ -82,3 +89,4 @@ const getData = async (endpoint: string, selectedCamera: string): Promise<FetchD
 };
 
 export default getData;
+
