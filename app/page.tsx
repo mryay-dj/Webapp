@@ -5,16 +5,12 @@ import SignIn from "./auth/signin/page";
 
 
 dotenv.config();
-export const metadata: Metadata = {
-  title: "AI powered Safe Community App",
-  description: "AI powered application to improve safety in communities and Universities.",
-  // other metadata
-};
+ 
 
-export default function Home() {
+export default function Page() {
   return (
     <>
-      <Dashboard/>
+      <SignIn/>
     </>
   );
 }

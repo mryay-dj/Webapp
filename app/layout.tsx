@@ -1,4 +1,8 @@
 "use client";
+import { Amplify } from 'aws-amplify';
+import config from '../aws-exports';
+Amplify.configure(config);
+import SignIn from "./auth/signin/page";
 import "./globals.css";
 import "./data-tables-css.css";
 import "./satoshi.css";
