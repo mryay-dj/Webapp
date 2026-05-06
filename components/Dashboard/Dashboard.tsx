@@ -150,16 +150,21 @@ const Dashboard: React.FC = () => {
 
         </CardDataStats>
       </div>
-      {/* Live Camera Grid - ADD HERE */}
+      {/* Live Camera Grid */}
       <div className="mt-4 grid grid-cols-4 gap-4">
-        {["Camera 1", "Camera 2", "Camera 3", "Camera 4"].map((cam) => (
-          <div key={cam} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-            <p className="text-sm font-medium text-gray-500">{cam}</p>
-            <h4 className="mt-2 text-xl font-bold text-black dark:text-white">183</h4>
-            <p className="text-xs text-gray-400">People</p>
-          </div>
-        ))}
+        {[
+        { id: "Camera 1", people: 34 },
+        { id: "Camera 2", people: 48 },
+        { id: "Camera 3", people: 53 },
+        { id: "Camera 4", people: 18 },
+      ].map((cam) => (
+      <div key={cam.id} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <p className="text-sm font-medium text-gray-500">{cam.id}</p>
+        <h4 className="mt-2 text-xl font-bold text-black dark:text-white">{cam.people}</h4>
+        <p className="text-xs text-gray-400">People</p>
       </div>
+    ))}
+    </div>
 
       <br></br>
       <h5>Data Summary </h5>
