@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
     </div>
 
       <br></br>
-      <h5>Data Summary </h5>
+      <h5 className="data" color="red ">Data Summary </h5>
 
 
 

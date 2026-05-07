@@ -1,7 +1,7 @@
 "use client";
 import { Amplify } from 'aws-amplify';
 import config from '../aws-exports';
-Amplify.configure(config);
+Amplify.configure(config as any);
 import SignIn from "./auth/signin/page";
 import "./globals.css";
 import "./data-tables-css.css";
