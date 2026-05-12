@@ -150,21 +150,50 @@ const Dashboard: React.FC = () => {
 
         </CardDataStats>
       </div>
-      {/* Live Camera Grid */}
-      <div className="mt-4 grid grid-cols-4 gap-4">
-        {[
-        { id: "Camera 1", people: 34 },
-        { id: "Camera 2", people: 48 },
-        { id: "Camera 3", people: 53 },
-        { id: "Camera 4", people: 18 },
-      ].map((cam) => (
-      <div key={cam.id} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+      {/* Active Cameras Label */}
+<h5 className="mt-4 mb-2 text-lg font-semibold text-black dark:text-white">
+  Active Cameras
+</h5>
+
+{/* Live Camera Grid */}
+<div className="mt-2 grid grid-cols-4 gap-4">
+  {[
+    { id: "Camera 1", people: 34, status: "bg-red-400"},
+    { id: "Camera 2", people: 48 },
+    { id: "Camera 3", people: 53 },
+    { id: "Camera 4", people: 18 },
+  ].map((cam) => (
+    <div key={cam.id} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div className="flex items-center gap-2 mb-2">
         <p className="text-sm font-medium text-gray-500">{cam.id}</p>
-        <h4 className="mt-2 text-xl font-bold text-black dark:text-white">{cam.people}</h4>
-        <p className="text-xs text-gray-400">People</p>
+        <svg
+  className="fill-primary dark:fill-white"
+  width="20"
+  height="22"
+  viewBox="0 0 20 22"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  {/* Outer circle */}
+  <circle cx="10" cy="11" r="9" stroke="" strokeWidth="2" />
+  
+  {/* Inner circle */}
+  <circle cx="10" cy="11" r="6" fill="" />
+  
+  {/* Dot */}
+  <circle cx="10" cy="11" r="1.5" fill="" />
+</svg>
+        <div className="w-2 h-2 rounded-full bg-red-400 ${cam.status}" />
       </div>
-    ))}
+      <svg className="fill-primary dark:fill-white mb-1" width="24" height="24" viewBox="0 0 512 512">
+        <path d="M256 106.6c20.6.1 37.3-16.6 37.3-37.3 0-20.6-16.7-37.3-37.3-37.3-20.6 0-37.3 16.7-37.3 37.3 0 20.6 16.7 37.3 37.3 37.3zM293.4 115h-74.8c-28.2 0-46.6 24.8-46.6 48.4V277c0 22 31 22 31 0V172h6v285.6c0 30.4 42 29.4 43 0V293h8v164.7c1.7 31.2 43 28.2 43-.1V172h5v105c0 22 32 22 32 0V163.4c0-23.5-18.5-48.4-46.6-48.4z"/>
+      </svg>
+      <h4 className="text-xl font-bold text-black dark:text-white">{cam.people}</h4>
+      <p className="text-xs text-gray-400">Occupants</p>
     </div>
+  ))}
+</div>
+     
 
       <br></br>
       <h5 className="data" color="red ">Data Summary </h5>

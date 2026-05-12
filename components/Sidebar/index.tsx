@@ -173,7 +173,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
 
 
-                 {/* <!-- Menu Item Events --> }
+                 {/* <!-- Menu Item Events */ }
               <li>
                 <Link
                         href="/events"

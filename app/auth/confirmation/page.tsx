@@ -36,7 +36,7 @@ export default function ConfirmPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4">Confirm Account</h2>
+      <h2 className="text-xl font-bold mb-4 text-blue">Confirm Account</h2>
 
       <p className="mb-2">Email: {email}</p>
 
