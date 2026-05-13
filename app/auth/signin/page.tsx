@@ -23,26 +23,15 @@ const SignIn: React.FC = () => {
   e.preventDefault();
   setLoading(true);
   setError("");
-
   try {
-    // check if already signed in first
-    try {
-      await getCurrentUser();
-      window.location.href = "/dashboard";
-      return;
-    } catch {}
-
-    const res = await signIn({
-      username: email,
-      password,
-    });
-
+    const res = await signIn({ username: email, password });
     if (res.isSignedIn) {
       window.location.href = "/dashboard";
+    } else {
+      setError("Sign in failed. Check your credentials.");
     }
   } catch (err: any) {
-    console.log("SIGN IN ERROR:", err);
-    setError(err.message || "Sign in failed");
+    setError(err.message || "Invalid email or password");
   } finally {
     setLoading(false);
   }

@@ -114,7 +114,7 @@ const Dashboard: React.FC = () => {
 
         </CardDataStats>
       
-        <CardDataStats title="Anomalies" total={`${latestRecord?.Anomalies || "2"}`} rate="2.21%" levelDown>
+        <CardDataStats title="Anomalies" total={`${latestRecord?.Anomaly_Count || "2"}`} rate="2.21%" levelDown>
         <svg
   className="fill-primary dark:fill-white"
   width="35"

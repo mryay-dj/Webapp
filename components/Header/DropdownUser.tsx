@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { signOut } from "aws-amplify/auth";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -44,18 +45,13 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Sai Datta B
+            User
           </span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <Image
-            width={112}
-            height={112}
-            src={"/images/user/user.png"}
-            alt="User"
-          />
-        </span>
+        <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+          U
+        </div>
 
         <svg
           className="hidden fill-current sm:block"
@@ -135,7 +131,19 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+          {/*LOGOUT BUTTON */}
+        <button
+          onClick={async () => {
+            try {
+              await signOut({ global: true });
+            } catch (err) {
+              console.log(err);
+            } finally {
+              window.location.href = "/auth/signin";
+            }
+          }}
+          className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+        >
           <svg
             className="fill-current"
             width="22"
@@ -153,10 +161,11 @@ const DropdownUser = () => {
               fill=""
             />
           </svg>
+
           Log Out
         </button>
       </div>
-      {/* <!-- Dropdown End --> */}
+      {/* Dropdown End */}
     </div>
   );
 };
