@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 const options = ['CPCC', 'TeCSAR Lab', 'Parking lot'];
+const recordSpan = ['All', 'Today', 'This week', 'This month', 'Camera 1', 'Camera 2', 'Camera 3', 'Camera 4'] // video recording options for different time periods and cameras
 const sampleData = [
   {
     videoUrl: 'path/to/video1.mp4',
@@ -26,6 +27,7 @@ const sampleData = [
     description: 'A Mass gathering anomaly has been identified at this location',
     timestamp: '00:10:15',
   },
+
   // Add more sample items as needed
 ];
 
@@ -37,6 +39,8 @@ const events = () => {
       <div className="grid grid-cols-1 items-center justify-center">
   <Dropdown options={options} title="Location" onChange= {() => {}}/>
 
+    <h1>Camera Recordings</h1>
+      
 
 </div>
     <br>

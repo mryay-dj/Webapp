@@ -63,10 +63,10 @@ const Header = (props: {
 
         <div className="hidden sm:block">
           <form action="https://formbold.com/s/unique_form_id" method="POST">
-            <div className="relative">
+            <div className="relative flex">
               
 
-              <div className="flex justify-between gap-2">
+              <div className="flex align-center gap-12 flex gap-12 border border-gray-300 p-2 rounded-xl">
                 {["Cameras", "Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"].map((tab) => (
                 <button key={tab} className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-white">
                   {tab}

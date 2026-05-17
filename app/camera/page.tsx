@@ -82,7 +82,7 @@ const Camera = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Camera" />
+      <Breadcrumb pageName="Camera 1: Overview" />
 
       {/* Dropdowns */}
       <div className="grid grid-cols-2 gap-4">
