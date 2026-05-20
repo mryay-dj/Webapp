@@ -12,6 +12,7 @@ import Dropdown from "../UIElements/Dropdown";
 import { ToastContainer } from 'react-toastify';
 import dynamic from "next/dynamic";
 import {API_KEY, URL, headers} from "../../hooks/config";
+
 const MapOne = dynamic(() => import("../Maps/MapOne"), {
   ssr: false,
 });
@@ -33,7 +34,8 @@ interface Item {
   X_Coordinates : number[]
   Y_Coordinates : number[]
 }
-const options = ['CPCC', 'TeCSAR Lab', 'Parking lot'];
+const options = ['CPCC', 'TeCSAR Lab', 'Parking lot', '7th Street Market'];
+
 const cards = [
   { imageUrl: '/images/Anomalies/gun.png', count: 0, title : "mass gathering" },
   { imageUrl:'/images/Anomalies/massgathering.png', count: 1 , title : "mass gathering"},
@@ -64,26 +66,38 @@ const Dashboard: React.FC = () => {
   const endpoint = URL;
   const [selectedLocation, setSelectedLocation] = useState<string>('CPCC'); // Set default value to "Camera 1"
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
+  const [allRecords, setAllRecords] = useState<Item[]>([]);
 
   useEffect(() => {
     fetchData();
-  }, []); // Add dependencies to the useEffect dependency array
+  }, [selectedLocation]); // Add dependencies to the useEffect dependency array
 
-  const fetchData = async () => {
-    try {
-      const { latestRecord } = await getData(endpoint, "Camera 1");
-      setLatestRecord(latestRecord);
-      
-    }
-     catch (error) {
-      // Handle error appropriately
-      console.error('Error fetching data:', error);
-    }
-    
-  };
+const fetchData = async () => {
+  try {
+    const results = await Promise.all([
+      getData(endpoint, "Camera 1"),
+      getData(endpoint, "Camera 2"),
+      getData(endpoint, "Camera 3"),
+      getData(endpoint, "Camera 4"),
+    ]);
+
+    const all = results
+      .map(r => r.latestRecord)
+      .filter(Boolean) as Item[];
+
+    // filter by selected location
+    const filtered = all.filter(r => r.Location === selectedLocation);
+
+    setAllRecords(filtered);
+    setLatestRecord(filtered[0] || null);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+};
   const handleLocationChange = (location: string) => {
     setSelectedLocation(location);
   };
+    const cameraList = ["Camera 1", "Camera 2", "Camera 3", "Camera 4"];
  
  
   return (
@@ -96,7 +110,7 @@ const Dashboard: React.FC = () => {
 <br></br>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
   
-        <CardDataStats title="People" total = {latestRecord?.People_Count || "47"} rate= {`${latestRecord?.Recorded_Time || getCurrentTimestamp() } EST`}>
+        <CardDataStats title="People" total={String(allRecords.reduce((sum, r) => sum + Number(r.People_Count || 0), 0) || 0)} rate= {`${latestRecord?.Recorded_Time || getCurrentTimestamp() } EST`}>
           
         <svg
   className="fill-primary dark:fill-white"
@@ -157,41 +171,28 @@ const Dashboard: React.FC = () => {
 
 {/* Live Camera Grid */}
 <div className="mt-2 grid grid-cols-4 gap-4">
-  {[
-    { id: "Camera 1", people: 34, status: "bg-red-400"},
-    { id: "Camera 2", people: 48 },
-    { id: "Camera 3", people: 53 },
-    { id: "Camera 4", people: 18 },
-  ].map((cam) => (
-    <div key={cam.id} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="flex items-center gap-2 mb-2">
-        <p className="text-sm font-medium text-gray-500">{cam.id}</p>
-        <svg
-  className="fill-primary dark:fill-white"
-  width="20"
-  height="22"
-  viewBox="0 0 20 22"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
-  {/* Outer circle */}
-  <circle cx="10" cy="11" r="9" stroke="" strokeWidth="2" />
-  
-  {/* Inner circle */}
-  <circle cx="10" cy="11" r="6" fill="" />
-  
-  {/* Dot */}
-  <circle cx="10" cy="11" r="1.5" fill="" />
-</svg>
-        <div className="w-2 h-2 rounded-full bg-red-400 ${cam.status}" />
+  {["Camera 1", "Camera 2", "Camera 3", "Camera 4"].map((camId) => {
+    const camData = allRecords.find(r => r.Cam_ID === camId);
+    return (
+      <div key={camId} className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-sm font-medium text-gray-500">{camId}</p>
+          <svg className="fill-primary dark:fill-white" width="20" height="22" viewBox="0 0 20 22" fill="none">
+            <circle cx="10" cy="11" r="9" strokeWidth="2" />
+            <circle cx="10" cy="11" r="6" />
+            <circle cx="10" cy="11" r="1.5" />
+          </svg>
+        </div>
+        <svg className="fill-primary dark:fill-white mb-1" width="24" height="24" viewBox="0 0 512 512">
+          <path d="M256 106.6c20.6.1 37.3-16.6 37.3-37.3 0-20.6-16.7-37.3-37.3-37.3-20.6 0-37.3 16.7-37.3 37.3 0 20.6 16.7 37.3 37.3 37.3zM293.4 115h-74.8c-28.2 0-46.6 24.8-46.6 48.4V277c0 22 31 22 31 0V172h6v285.6c0 30.4 42 29.4 43 0V293h8v164.7c1.7 31.2 43 28.2 43-.1V172h5v105c0 22 32 22 32 0V163.4c0-23.5-18.5-48.4-46.6-48.4z"/>
+        </svg>
+        <h4 className="text-xl font-bold text-black dark:text-white">
+          {camData?.People_Count || 0}
+        </h4>
+        <p className="text-xs text-gray-400">Occupants</p>
       </div>
-      <svg className="fill-primary dark:fill-white mb-1" width="24" height="24" viewBox="0 0 512 512">
-        <path d="M256 106.6c20.6.1 37.3-16.6 37.3-37.3 0-20.6-16.7-37.3-37.3-37.3-20.6 0-37.3 16.7-37.3 37.3 0 20.6 16.7 37.3 37.3 37.3zM293.4 115h-74.8c-28.2 0-46.6 24.8-46.6 48.4V277c0 22 31 22 31 0V172h6v285.6c0 30.4 42 29.4 43 0V293h8v164.7c1.7 31.2 43 28.2 43-.1V172h5v105c0 22 32 22 32 0V163.4c0-23.5-18.5-48.4-46.6-48.4z"/>
-      </svg>
-      <h4 className="text-xl font-bold text-black dark:text-white">{cam.people}</h4>
-      <p className="text-xs text-gray-400">Occupants</p>
-    </div>
-  ))}
+    );
+  })}
 </div>
      
 

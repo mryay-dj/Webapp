@@ -15,7 +15,7 @@ const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { s
 import dynamic from "next/dynamic";
 const Heatmap = dynamic(() => import("@/components/UIElements/Heatmap"), { ssr: false });
 
-const options = ["CPCC", "TeCSAR Lab", "Parking lot"];
+const options = ["CPCC", "TeCSAR Lab", "Parking lot", "7th Street Market"];
 const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4"];
 const tabs = ["Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"];
 
@@ -49,17 +49,18 @@ const cards = [
   { imageUrl: "/images/Anomalies/fight.png", count: 0, title: "Fight" },
 ];
 
-const Camera = () => {
+const Camera = () => { 
   const router = useRouter();
   const [selectedCamera, setSelectedCamera] = useState("Camera 1");
   const [selectedLocation, setSelectedLocation] = useState("CPCC");
   const [activeTab, setActiveTab] = useState("Time Chart");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
+  
 
   const fetchData = async () => {
     try {
       const { latestRecord } = await getData(URL, selectedCamera);
-      setLatestRecord(latestRecord);
+      setLatestRecord(latestRecord); 
     } catch (err) {
       console.error(err);
     }

@@ -70,18 +70,31 @@ const getData = async (endpoint: string, selectedCamera: string): Promise<FetchD
     }
 
     const responseData = await response.json();
+    console.log("RAW RESPONSE:", responseData);
     const fetchedData = (responseData?.data?.listCameraData?.items || []).map((item: any) => ({
       ...item,
       X_Coordinates: item.X_Coordinates?.map((x: string) => Number(x)) || [],
       Y_Coordinates: item.Y_Coordinates?.map((y: string) => Number(y)) || [],
     }));
+    
+    console.log("Selected Camera:", selectedCamera);
+    console.log("FULL DATA:", fetchedData);
+    console.log("FIRST ITEM:", fetchedData[0]);
 
-    console.log("RAW AWS DATA:", fetchedData);
+    if (fetchedData.length > 0) {
+      console.log("Camera:", fetchedData[0].Cam_ID);
+      console.log("Location:", fetchedData[0].Location);
+      console.log("People:", fetchedData[0].People_Count);
+      console.log("FULL DATA:", fetchedData);
+      console.log("FIRST ITEM:", fetchedData[0]);
+
+}
+
 
     const sortedData = [...fetchedData].sort((a, b) => b.id - a.id);
     const latestRecord = sortedData.length > 0 ? sortedData[0] : null;
-
-    return { latestRecord };
+    console.log("LATEST RECORD:", latestRecord);
+    return { latestRecord, items: sortedData };
   } catch (error) {
     console.error('Error fetching data:', error);
     return { latestRecord: null };
