@@ -8,14 +8,13 @@ const LOCATION_MAP: Record<string, string> = {
   'ABC Store': 'ABC Store',
 };
 
-// Remember where each location starts so we don't rescan every poll
 const tokenCache: Record<string, string | null> = {};
 
 const getHourlyData = async (location: string, camId: string) => {
   const dbLocation = LOCATION_MAP[location] ?? location;
+  const cacheKey = `${dbLocation}#${camId}`;
 
   try {
-    // For ABC Store use direct fetch no pagination needed
     if (dbLocation === 'ABC Store') {
       const response = await fetch(URL, {
         method: "POST",
@@ -62,10 +61,11 @@ const getHourlyData = async (location: string, camId: string) => {
       )[0];
     }
 
-    // For other locations paginate through using cached token
-    let nextToken: string | null = tokenCache[dbLocation] ?? null;
+    let nextToken: string | null = tokenCache[cacheKey] ?? null;
+    let allItems: any[] = [];
     let pages = 0;
-    const MAX_PAGES = 20;
+    const MAX_PAGES = 30;
+    let foundStart = false;
 
     while (pages < MAX_PAGES) {
       const response = await fetch(URL, {
@@ -115,19 +115,33 @@ const getHourlyData = async (location: string, camId: string) => {
       console.log(`[${dbLocation}][${camId}] page ${pages}: ${items.length} items`);
 
       if (items.length > 0) {
-        // Cache this token so next poll starts here
-        tokenCache[dbLocation] = nextToken;
-        return [...items].sort((a, b) =>
+        if (!foundStart) {
+          tokenCache[cacheKey] = nextToken;
+          foundStart = true;
+        }
+        allItems = [...allItems, ...items];
+
+        const mostRecent = [...allItems].sort((a, b) =>
           new Date(b.Updated_Time).getTime() - new Date(a.Updated_Time).getTime()
         )[0];
+
+        const ageHours = (Date.now() - new Date(mostRecent.Updated_Time).getTime()) / 3600000;
+        if (ageHours < 24) {
+          console.log(`[${dbLocation}][${camId}] recent data found, stopping`);
+          break;
+        }
       }
 
+      if (foundStart && items.length === 0) break;
       if (!nt) break;
       nextToken = nt;
     }
 
-    console.warn(`[${dbLocation}][${camId}] not found after ${pages} pages`);
-    return null;
+    if (allItems.length === 0) return null;
+
+    return [...allItems].sort((a, b) =>
+      new Date(b.Updated_Time).getTime() - new Date(a.Updated_Time).getTime()
+    )[0];
 
   } catch (error) {
     console.error(`getHourlyData error [${dbLocation}][${camId}]:`, error);

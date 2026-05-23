@@ -4,38 +4,36 @@ import ChartFour from "@/components/Charts/ChartFour";
 import ChartOne from "@/components/Charts/ChartOne";
 import ChartThree from "@/components/Charts/ChartThree";
 import ChartTwo from "@/components/Charts/ChartTwo";
-import OccupancyIndicator from "@/components/Charts/OccupancyIndicator";
 import React, { useState, useEffect } from "react";
-import getData from "../../hooks/getHourlyData";
+import getHourlyData from "../../hooks/getHourlyData";
 import Anomalies from "@/components/UIElements/Anamolies";
-import { URL } from "../../hooks/config";
 import Dropdown from "@/components/UIElements/Dropdown";
 import { useRouter } from "next/navigation";
-const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { ssr: false });
 import dynamic from "next/dynamic";
+
+const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { ssr: false });
 const Heatmap = dynamic(() => import("@/components/UIElements/Heatmap"), { ssr: false });
 
-const options = ["CPCC", "TeCSAR Lab", "Parking lot", "7th Street Market"];
-const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4"];
+const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
+const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"];
 const tabs = ["Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"];
 
 interface Item {
-  Anomalies: string[];
-  Anomaly_Count: string;
-  id: number;
+  id: string;
   Recorded_Time: string;
-  Active_Cams: number;
   Cam_ID: string;
-  People_Count: string;
-  High: number;
-  Low: number;
-  Status: string;
-  Seven_Five: number;
-  Updated_Time: string;
-  Two_Five: number;
   Location: string;
-  X_Coordinates: number[];
-  Y_Coordinates: number[];
+  People_Count?: string;
+  Average_People?: string;
+  Cumulative_People?: string;
+  Cumulative_Anomalies?: string;
+  Maximum_people?: string;
+  total_people?: string;
+  Hour?: string;
+  Day?: string;
+  Updated_Time?: string;
+  X_Coordinates?: number[];
+  Y_Coordinates?: number[];
 }
 
 const cards = [
@@ -49,20 +47,24 @@ const cards = [
   { imageUrl: "/images/Anomalies/fight.png", count: 0, title: "Fight" },
 ];
 
-const Camera = () => { 
+const Camera = () => {
   const router = useRouter();
   const [selectedCamera, setSelectedCamera] = useState("Camera 1");
-  const [selectedLocation, setSelectedLocation] = useState("CPCC");
+  const [selectedLocation, setSelectedLocation] = useState("7th Street Market");
   const [activeTab, setActiveTab] = useState("Time Chart");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
-  
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
-      const { latestRecord } = await getData(URL, selectedCamera);
-      setLatestRecord(latestRecord); 
+      const record = await getHourlyData(selectedLocation, selectedCamera);
+      setLatestRecord(record);
+      console.log(`[Camera page] ${selectedLocation} ${selectedCamera}:`, record);
     } catch (err) {
-      console.error(err);
+      console.error("Camera page fetch error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,7 +91,9 @@ const Camera = () => {
 
       {/* Page title */}
       <div className="flex items-center gap-4 mb-6">
-        <h2 className="text-xl font-medium text-black dark:text-white">Camera 1 : Overview</h2>
+        <h2 className="text-xl font-medium text-black dark:text-white">
+          {selectedCamera} : Overview
+        </h2>
         <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
       </div>
 
@@ -99,7 +103,7 @@ const Camera = () => {
         <Dropdown options={cams} title="Camera" onChange={setSelectedCamera} />
       </div>
 
-      {/* Single unified stat bar */}
+      {/* Stat bar */}
       <div className="grid grid-cols-3 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-6 overflow-hidden">
         {/* People */}
         <div className="flex items-center gap-3 px-6 py-5 border-r border-stroke dark:border-strokedark">
@@ -111,6 +115,9 @@ const Camera = () => {
               {latestRecord?.People_Count || "0"}
             </p>
             <p className="text-sm text-bodydark">People</p>
+            {latestRecord?.Updated_Time && (
+              <p className="text-xs text-gray-400">{latestRecord.Updated_Time} EST</p>
+            )}
           </div>
         </div>
 
@@ -121,25 +128,36 @@ const Camera = () => {
           </svg>
           <div>
             <p className="text-2xl font-medium text-black dark:text-white">
-              {latestRecord?.Anomaly_Count || "0"}
+              {latestRecord?.Cumulative_Anomalies || "0"}
             </p>
             <p className="text-sm text-bodydark">Anomalies</p>
           </div>
         </div>
 
-        {/* Active Cameras */}
+        {/* Status */}
         <div className="flex items-center gap-3 px-6 py-5">
           <svg className="w-6 h-6 text-bodydark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.277A1 1 0 0121 8.65v6.7a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
           </svg>
           <div>
-            <p className="text-2xl font-medium text-black dark:text-white">
-              {latestRecord?.Active_Cams || "0"}
-            </p>
-            <p className="text-sm text-bodydark">Active Cameras</p>
+            <div className="flex items-center gap-2">
+              <span className={`inline-block h-2 w-2 rounded-full ${latestRecord ? "bg-green-500" : "bg-gray-400"}`} />
+              <p className="text-2xl font-medium text-black dark:text-white">
+                {latestRecord ? "Live" : "No Data"}
+              </p>
+            </div>
+            <p className="text-sm text-bodydark">Status</p>
           </div>
         </div>
       </div>
+
+      {loading && <p className="text-xs text-gray-400 mb-2">Refreshing...</p>}
+
+      {!loading && !latestRecord && (
+        <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+          No data found for <strong>{selectedLocation}</strong> — <strong>{selectedCamera}</strong>
+        </div>
+      )}
 
       {/* Camera Data section */}
       <div className="flex items-center gap-4 mb-4">
@@ -149,7 +167,6 @@ const Camera = () => {
 
       {/* Tabbed chart card */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {/* Tab bar */}
         <div className="flex border-b border-stroke dark:border-strokedark px-2">
           {tabs.map((tab) => (
             <button
@@ -166,7 +183,6 @@ const Camera = () => {
           ))}
         </div>
 
-        {/* Tab content */}
         <div className="p-6">
           {activeTab === "Time Chart" && <ChartFour />}
 
@@ -194,7 +210,6 @@ const Camera = () => {
           )}
 
           {activeTab === "Cumulative People" && <ChartOne />}
-
           {activeTab === "Visitor Analytics" && <ChartThree />}
         </div>
       </div>
