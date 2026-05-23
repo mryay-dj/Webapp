@@ -6,7 +6,7 @@ import ChartThree from "@/components/Charts/ChartThree";
 import ChartTwo from "@/components/Charts/ChartTwo";
 import OccupancyIndicator from "@/components/Charts/OccupancyIndicator";
 import React, { useState, useEffect } from "react";
-import getData from "../../hooks/getData";
+import getData from "../../hooks/getHourlyData";
 import Anomalies from "@/components/UIElements/Anamolies";
 import { URL } from "../../hooks/config";
 import Dropdown from "@/components/UIElements/Dropdown";
