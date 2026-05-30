@@ -1,22 +1,22 @@
 "use client";
 
-import ChartFour from "@/components/Charts/ChartFour";
-import ChartOne from "@/components/Charts/ChartOne";
-import ChartThree from "@/components/Charts/ChartThree";
-import ChartTwo from "@/components/Charts/ChartTwo";
 import React, { useState, useEffect } from "react";
 import getHourlyData from "../../hooks/getHourlyData";
 import Anomalies from "@/components/UIElements/Anamolies";
 import Dropdown from "@/components/UIElements/Dropdown";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import ChartFour from "@/components/Charts/ChartFour";
+import ChartOne from "@/components/Charts/ChartOne";
+import ChartThree from "@/components/Charts/ChartThree";
+import ChartTwo from "@/components/Charts/ChartTwo";
 
 const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { ssr: false });
 const Heatmap = dynamic(() => import("@/components/UIElements/Heatmap"), { ssr: false });
 
 const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
 const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"];
-const tabs = ["Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"];
+const tabs = ["Anomalies", "Visitor Analytics"];
 
 interface Item {
   id: string;
@@ -24,13 +24,7 @@ interface Item {
   Cam_ID: string;
   Location: string;
   People_Count?: string;
-  Average_People?: string;
-  Cumulative_People?: string;
   Cumulative_Anomalies?: string;
-  Maximum_people?: string;
-  total_people?: string;
-  Hour?: string;
-  Day?: string;
   Updated_Time?: string;
   X_Coordinates?: number[];
   Y_Coordinates?: number[];
@@ -51,18 +45,19 @@ const Camera = () => {
   const router = useRouter();
   const [selectedCamera, setSelectedCamera] = useState("Camera 1");
   const [selectedLocation, setSelectedLocation] = useState("7th Street Market");
-  const [activeTab, setActiveTab] = useState("Time Chart");
+  const [activeTab, setActiveTab] = useState("Anomalies");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showFullHeatmap, setShowFullHeatmap] = useState(false);
+  const [heatmapMode, setHeatmapMode] = useState("Heat Map");
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const record = await getHourlyData(selectedLocation, selectedCamera);
       setLatestRecord(record);
-      console.log(`[Camera page] ${selectedLocation} ${selectedCamera}:`, record);
     } catch (err) {
-      console.error("Camera page fetch error:", err);
+      console.error("Camera fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -74,98 +69,215 @@ const Camera = () => {
     return () => clearInterval(interval);
   }, [selectedCamera, selectedLocation]);
 
+  const peopleCount = parseInt(latestRecord?.People_Count ?? "0", 10);
+  const hasCoordinates = !!(latestRecord?.X_Coordinates && latestRecord?.Y_Coordinates);
+
   return (
     <>
+      {/* FULL HEATMAP MODAL */}
+      {showFullHeatmap && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-boxdark">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-strokedark">
+            <button
+              onClick={() => setShowFullHeatmap(false)}
+              className="flex items-center gap-2 text-white hover:text-primary transition"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-medium">{selectedCamera} : Overview</span>
+            </button>
+            <select
+              value={heatmapMode}
+              onChange={(e) => setHeatmapMode(e.target.value)}
+              className="bg-white text-black rounded-lg px-4 py-2 text-sm font-medium"
+            >
+              <option>Heat Map</option>
+              <option>Dwell Times</option>
+              <option>Exit / Entry Counts</option>
+              <option>Movement Patterns</option>
+              <option>Speed & Trajectory</option>
+            </select>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {hasCoordinates ? (
+              <BirdEyeView
+                x={latestRecord?.X_Coordinates ?? []}
+                y={latestRecord?.Y_Coordinates ?? []}
+              />
+            ) : (
+              <div className="w-full h-full relative">
+                <img
+                  src="/images/heatmap-placeholder.png"
+                  alt="heatmap"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-black bg-opacity-60 rounded-xl px-8 py-4 text-center">
+                    <p className="text-white font-medium">Live data pending</p>
+                    <p className="text-gray-400 text-sm mt-1">Coordinate data not yet available</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="bg-boxdark border-t border-strokedark px-6 py-4">
+            <div className="flex items-center gap-4 mb-3">
+              <button className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium">
+                Static
+              </button>
+              <div className="flex-1 flex justify-center items-center gap-4">
+                <button className="text-gray-400 hover:text-white">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+                  </svg>
+                </button>
+                <button className="bg-primary w-8 h-8 rounded flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                  </svg>
+                </button>
+                <button className="text-gray-400 hover:text-white">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex gap-2">
+                {["24 hr", "12 hr", "6 hr"].map((t) => (
+                  <button key={t} className="text-white text-sm px-3 py-1.5 rounded-lg border border-strokedark hover:border-primary hover:text-primary transition">
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative w-full h-10 bg-meta-4 rounded-lg overflow-hidden flex items-center px-2">
+              <div className="absolute left-0 top-0 h-full w-1/3 bg-primary opacity-50 rounded-lg" />
+              <div className="absolute left-1/3 top-0 h-full w-0.5 bg-white" />
+              <div className="relative z-10 flex justify-between w-full">
+                {["1 PM", "3 PM", "5 PM", "7 PM", "9 PM", "11 PM", "1 AM", "3 AM"].map((t) => (
+                  <span key={t} className="text-gray-400 text-xs">{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN PAGE */}
+
       {/* Back button */}
-      <div className="mb-6">
+      <div className="mb-4">
         <button
           onClick={() => router.push("/dashboard")}
           className="flex items-center gap-2 text-sm text-bodydark hover:text-black dark:hover:text-white transition"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Return to Dashboard
         </button>
       </div>
 
-      {/* Page title */}
-      <div className="flex items-center gap-4 mb-6">
-        <h2 className="text-xl font-medium text-black dark:text-white">
-          {selectedCamera} : Overview
-        </h2>
-        <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
-      </div>
-
-      {/* Location + Camera dropdowns */}
+      {/* Dropdowns */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Dropdown options={options} title="Location" onChange={setSelectedLocation} />
         <Dropdown options={cams} title="Camera" onChange={setSelectedCamera} />
       </div>
 
-      {/* Stat bar */}
-      <div className="grid grid-cols-3 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-6 overflow-hidden">
-        {/* People */}
-        <div className="flex items-center gap-3 px-6 py-5 border-r border-stroke dark:border-strokedark">
-          <svg className="w-6 h-6 text-bodydark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <div>
-            <p className="text-2xl font-medium text-black dark:text-white">
-              {latestRecord?.People_Count || "0"}
-            </p>
-            <p className="text-sm text-bodydark">People</p>
-            {latestRecord?.Updated_Time && (
-              <p className="text-xs text-gray-400">{latestRecord.Updated_Time} EST</p>
-            )}
-          </div>
-        </div>
-
-        {/* Anomalies */}
-        <div className="flex items-center gap-3 px-6 py-5 border-r border-stroke dark:border-strokedark">
-          <svg className="w-6 h-6 text-bodydark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-          </svg>
-          <div>
-            <p className="text-2xl font-medium text-black dark:text-white">
-              {latestRecord?.Cumulative_Anomalies || "0"}
-            </p>
-            <p className="text-sm text-bodydark">Anomalies</p>
-          </div>
-        </div>
-
-        {/* Status */}
-        <div className="flex items-center gap-3 px-6 py-5">
-          <svg className="w-6 h-6 text-bodydark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.277A1 1 0 0121 8.65v6.7a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-          </svg>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className={`inline-block h-2 w-2 rounded-full ${latestRecord ? "bg-green-500" : "bg-gray-400"}`} />
-              <p className="text-2xl font-medium text-black dark:text-white">
-                {latestRecord ? "Live" : "No Data"}
-              </p>
-            </div>
-            <p className="text-sm text-bodydark">Status</p>
-          </div>
-        </div>
-      </div>
-
-      {loading && <p className="text-xs text-gray-400 mb-2">Refreshing...</p>}
-
       {!loading && !latestRecord && (
         <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-          No data found for <strong>{selectedLocation}</strong> — <strong>{selectedCamera}</strong>
+          No data for <strong>{selectedLocation}</strong> — <strong>{selectedCamera}</strong>
         </div>
       )}
 
-      {/* Camera Data section */}
+      {/* TOP ROW — Overview + Heatmap */}
+      <div className="grid grid-cols-12 gap-4 mb-6">
+        <div className="col-span-12 xl:col-span-7">
+          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 h-full">
+            <div className="flex items-center gap-4 mb-4">
+              <h3 className="text-base font-medium text-black dark:text-white whitespace-nowrap">
+                {selectedCamera} : Overview
+              </h3>
+              <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-lg bg-gray-50 dark:bg-meta-4 p-4">
+                <svg className="w-7 h-7 text-bodydark mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <p className="text-3xl font-bold text-black dark:text-white">{peopleCount}</p>
+                <p className="text-sm text-bodydark mt-1">People</p>
+              </div>
+              <div className="rounded-lg bg-gray-50 dark:bg-meta-4 p-4">
+                <svg className="w-7 h-7 text-bodydark mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p className="text-3xl font-bold text-black dark:text-white">
+                  {latestRecord?.Cumulative_Anomalies || "0"}
+                </p>
+                <p className="text-sm text-bodydark mt-1">Anomalies</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Heatmap preview */}
+        <div className="col-span-12 xl:col-span-5">
+          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4 h-full">
+            <h3 className="text-base font-medium text-black dark:text-white mb-2">
+              View Heatmap
+            </h3>
+            <div
+              className="relative rounded-lg overflow-hidden cursor-pointer"
+              style={{ height: "150px" }}
+              onClick={() => setShowFullHeatmap(true)}
+            >
+              {hasCoordinates ? (
+                <Heatmap
+                  xValues={latestRecord?.X_Coordinates}
+                  yValues={latestRecord?.Y_Coordinates}
+                />
+              ) : (
+                <img
+                  src="/images/heatmap-placeholder.png"
+                  alt="heatmap preview"
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 py-2 flex justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CAMERA DATA LABEL */}
       <div className="flex items-center gap-4 mb-4">
-        <h3 className="text-base font-medium text-black dark:text-white">Camera Data</h3>
+        <h3 className="text-sm font-medium text-black dark:text-white">Camera Data</h3>
         <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
       </div>
 
-      {/* Tabbed chart card */}
+      {/* CUMULATIVE PEOPLE — first chart, always visible */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
+        <h4 className="text-base font-medium text-black dark:text-white mb-4">
+          Cumulative People
+        </h4>
+        <ChartOne />
+      </div>
+
+      {/* TIME CHART — second, always visible */}
+      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
+        <h4 className="text-base font-medium text-black dark:text-white mb-4">
+          Time Chart
+        </h4>
+        <ChartFour />
+      </div>
+
+      {/* TABS — Anomalies + Visitor Analytics */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex border-b border-stroke dark:border-strokedark px-2">
           {tabs.map((tab) => (
@@ -182,10 +294,7 @@ const Camera = () => {
             </button>
           ))}
         </div>
-
         <div className="p-6">
-          {activeTab === "Time Chart" && <ChartFour />}
-
           {activeTab === "Anomalies" && (
             <div className="grid grid-cols-12 gap-4">
               <div className="col-span-12 xl:col-span-8">
@@ -194,22 +303,8 @@ const Camera = () => {
               <div className="col-span-12 xl:col-span-4">
                 <Anomalies cards={cards} />
               </div>
-              <div className="col-span-12">
-                <Heatmap
-                  xValues={latestRecord?.X_Coordinates}
-                  yValues={latestRecord?.Y_Coordinates}
-                />
-              </div>
-              <div className="col-span-12">
-                <BirdEyeView
-                  x={latestRecord?.X_Coordinates ?? []}
-                  y={latestRecord?.Y_Coordinates ?? []}
-                />
-              </div>
             </div>
           )}
-
-          {activeTab === "Cumulative People" && <ChartOne />}
           {activeTab === "Visitor Analytics" && <ChartThree />}
         </div>
       </div>
