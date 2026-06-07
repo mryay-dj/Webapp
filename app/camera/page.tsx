@@ -257,7 +257,7 @@ const Camera = () => {
               onClick={() => setShowFullHeatmap(true)}
             >
               <img
-                src={heatmapUrl || "/images/heatmap-placeholder.png"}
+                src={heatmapUrl ?? ""}
                 alt="heatmap preview"
                 className="w-full h-full object-cover"
               />
