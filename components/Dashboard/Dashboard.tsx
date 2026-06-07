@@ -31,7 +31,7 @@ interface Item {
 
 const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
 
-const CAMERA_IDS = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"];
+const CAMERA_IDS = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 
 const cards = [
   { imageUrl: "/images/Anomalies/gun.png", count: 0, title: "Gun" },
@@ -198,3 +198,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+

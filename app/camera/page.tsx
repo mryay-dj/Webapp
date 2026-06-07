@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import getHourlyData from "../../hooks/getHourlyData";
+import getS3Heatmap from "../../hooks/getS3Heatmap";
 import Anomalies from "@/components/UIElements/Anamolies";
 import Dropdown from "@/components/UIElements/Dropdown";
 import { useRouter } from "next/navigation";
@@ -12,10 +13,9 @@ import ChartThree from "@/components/Charts/ChartThree";
 import ChartTwo from "@/components/Charts/ChartTwo";
 
 const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { ssr: false });
-const Heatmap = dynamic(() => import("@/components/UIElements/Heatmap"), { ssr: false });
 
 const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
-const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"];
+const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 const tabs = ["Anomalies", "Visitor Analytics"];
 
 interface Item {
@@ -26,8 +26,6 @@ interface Item {
   People_Count?: string;
   Cumulative_Anomalies?: string;
   Updated_Time?: string;
-  X_Coordinates?: number[];
-  Y_Coordinates?: number[];
 }
 
 const cards = [
@@ -50,6 +48,8 @@ const Camera = () => {
   const [loading, setLoading] = useState(false);
   const [showFullHeatmap, setShowFullHeatmap] = useState(false);
   const [heatmapMode, setHeatmapMode] = useState("Heat Map");
+  // heatmapUrl stores the S3 URL or null if not found
+  const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -63,14 +63,27 @@ const Camera = () => {
     }
   };
 
+  const fetchHeatmap = async () => {
+    // calls our hook which tries today then yesterday
+    const url = await getS3Heatmap(selectedLocation, selectedCamera);
+    setHeatmapUrl(url);
+    console.log("Heatmap URL:", url);
+  };
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+    fetchHeatmap();
+    // poll realtime data every 5 seconds
+    const dataInterval = setInterval(fetchData, 5000);
+    // refresh heatmap every 5 minutes
+    const heatmapInterval = setInterval(fetchHeatmap, 300000);
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(heatmapInterval);
+    };
   }, [selectedCamera, selectedLocation]);
 
   const peopleCount = parseInt(latestRecord?.People_Count ?? "0", 10);
-  const hasCoordinates = !!(latestRecord?.X_Coordinates && latestRecord?.Y_Coordinates);
 
   return (
     <>
@@ -99,28 +112,35 @@ const Camera = () => {
               <option>Speed & Trajectory</option>
             </select>
           </div>
+
+          {/* Full size heatmap */}
           <div className="flex-1 overflow-hidden">
-            {hasCoordinates ? (
-              <BirdEyeView
-                x={latestRecord?.X_Coordinates ?? []}
-                y={latestRecord?.Y_Coordinates ?? []}
+            {heatmapUrl ? (
+              <img
+                src={heatmapUrl}
+                alt="heatmap"
+                className="w-full h-full object-contain bg-black"
               />
             ) : (
               <div className="w-full h-full relative">
                 <img
                   src="/images/heatmap-placeholder.png"
-                  alt="heatmap"
+                  alt="heatmap placeholder"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-black bg-opacity-60 rounded-xl px-8 py-4 text-center">
-                    <p className="text-white font-medium">Live data pending</p>
-                    <p className="text-gray-400 text-sm mt-1">Coordinate data not yet available</p>
+                    <p className="text-white font-medium">No heatmap available today</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {selectedLocation} — {selectedCamera}
+                    </p>
                   </div>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Timeline scrubber */}
           <div className="bg-boxdark border-t border-strokedark px-6 py-4">
             <div className="flex items-center gap-4 mb-3">
               <button className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium">
@@ -145,7 +165,10 @@ const Camera = () => {
               </div>
               <div className="flex gap-2">
                 {["24 hr", "12 hr", "6 hr"].map((t) => (
-                  <button key={t} className="text-white text-sm px-3 py-1.5 rounded-lg border border-strokedark hover:border-primary hover:text-primary transition">
+                  <button
+                    key={t}
+                    className="text-white text-sm px-3 py-1.5 rounded-lg border border-strokedark hover:border-primary hover:text-primary transition"
+                  >
                     {t}
                   </button>
                 ))}
@@ -165,8 +188,6 @@ const Camera = () => {
       )}
 
       {/* MAIN PAGE */}
-
-      {/* Back button */}
       <div className="mb-4">
         <button
           onClick={() => router.push("/dashboard")}
@@ -179,7 +200,6 @@ const Camera = () => {
         </button>
       </div>
 
-      {/* Dropdowns */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <Dropdown options={options} title="Location" onChange={setSelectedLocation} />
         <Dropdown options={cams} title="Camera" onChange={setSelectedCamera} />
@@ -191,7 +211,7 @@ const Camera = () => {
         </div>
       )}
 
-      {/* TOP ROW — Overview + Heatmap */}
+      {/* TOP ROW — Overview + Heatmap preview */}
       <div className="grid grid-cols-12 gap-4 mb-6">
         <div className="col-span-12 xl:col-span-7">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 h-full">
@@ -208,6 +228,9 @@ const Camera = () => {
                 </svg>
                 <p className="text-3xl font-bold text-black dark:text-white">{peopleCount}</p>
                 <p className="text-sm text-bodydark mt-1">People</p>
+                {latestRecord?.Updated_Time && (
+                  <p className="text-xs text-gray-400 mt-1">{latestRecord.Updated_Time} EST</p>
+                )}
               </div>
               <div className="rounded-lg bg-gray-50 dark:bg-meta-4 p-4">
                 <svg className="w-7 h-7 text-bodydark mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +245,7 @@ const Camera = () => {
           </div>
         </div>
 
-        {/* Heatmap preview */}
+        {/* Heatmap preview — click to open full modal */}
         <div className="col-span-12 xl:col-span-5">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4 h-full">
             <h3 className="text-base font-medium text-black dark:text-white mb-2">
@@ -233,18 +256,11 @@ const Camera = () => {
               style={{ height: "150px" }}
               onClick={() => setShowFullHeatmap(true)}
             >
-              {hasCoordinates ? (
-                <Heatmap
-                  xValues={latestRecord?.X_Coordinates}
-                  yValues={latestRecord?.Y_Coordinates}
-                />
-              ) : (
-                <img
-                  src="/images/heatmap-placeholder.png"
-                  alt="heatmap preview"
-                  className="w-full h-full object-cover"
-                />
-              )}
+              <img
+                src={heatmapUrl || "/images/heatmap-placeholder.png"}
+                alt="heatmap preview"
+                className="w-full h-full object-cover"
+              />
               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 py-2 flex justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -255,13 +271,13 @@ const Camera = () => {
         </div>
       </div>
 
-      {/* CAMERA DATA LABEL */}
+      {/* CAMERA DATA */}
       <div className="flex items-center gap-4 mb-4">
         <h3 className="text-sm font-medium text-black dark:text-white">Camera Data</h3>
         <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
       </div>
 
-      {/* CUMULATIVE PEOPLE — first chart, always visible */}
+      {/* Cumulative People — always visible */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
         <h4 className="text-base font-medium text-black dark:text-white mb-4">
           Cumulative People
@@ -269,7 +285,7 @@ const Camera = () => {
         <ChartOne />
       </div>
 
-      {/* TIME CHART — second, always visible */}
+      {/* Time Chart — always visible */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
         <h4 className="text-base font-medium text-black dark:text-white mb-4">
           Time Chart
@@ -277,7 +293,7 @@ const Camera = () => {
         <ChartFour />
       </div>
 
-      {/* TABS — Anomalies + Visitor Analytics */}
+      {/* Anomalies + Visitor Analytics tabs */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex border-b border-stroke dark:border-strokedark px-2">
           {tabs.map((tab) => (
