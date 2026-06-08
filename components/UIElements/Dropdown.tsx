@@ -81,7 +81,7 @@ const Dropdown: React.FC<DropDownProps> = ({ options, title, onChange }) => {
           </svg>
         </span>
         <select
-        className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input"
+        className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:hover:border-white transition dark:hover:text-white transition"
         onChange={handleSelectChange}
         value={selectedValue}
       >
