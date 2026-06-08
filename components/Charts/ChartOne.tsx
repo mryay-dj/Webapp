@@ -198,7 +198,7 @@ const ChartOne: React.FC = () => {
       </div>
 
       <div>
-        <div id="chartOne" className="-ml-5 h-[355px] w-[105%]">
+        <div id="chartOne" className="-ml-5 h-[550px] w-[100%]">
           <ReactApexChart
             options={options}
             series={state.series}
