@@ -16,7 +16,8 @@ const options: ApexOptions = {
   labels: ["Afternoon [12-18]","Midnight [1-6]", "Morning [6-12]",  "Evening [18-24]"],
   legend: {
     show: true,
-    position: "bottom",
+    position: "left",
+    fontSize: "15px"
   },
 
   plotOptions: {
@@ -35,7 +36,7 @@ const options: ApexOptions = {
       breakpoint: 2600,
       options: {
         chart: {
-          width: 380,
+          width: 700,
         },
       },
     },
@@ -98,7 +99,7 @@ const ChartThree: React.FC = () => {
       </div>
 
       <div className="mb-2">
-        <div id="chartThree" className="mx-auto flex justify-center">
+        <div id="chartThree" className="mx-auto flex justify-center h-[550px]">
           <ReactApexChart
             options={options}
             series={state.series}
