@@ -36,7 +36,7 @@ export default function ConfirmPage() {
 
   return (
     <div className="p-6">
-      <h2 className="text-xl font-bold mb-4 text-blue">Confirm Account</h2>
+      <h2 className="text-xl font-bold mb-4 text-black dark:text-white">Confirm Account</h2>
 
       <p className="mb-2">Email: {email}</p>
 
@@ -52,7 +52,7 @@ export default function ConfirmPage() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded"
         >
           {loading ? "Confirming..." : "Confirm Account"}
         </button>

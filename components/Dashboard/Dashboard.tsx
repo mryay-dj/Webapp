@@ -9,6 +9,7 @@ import Anomalies from "../UIElements/Anamolies";
 import getHourlyData from "../../hooks/getHourlyData";
 import Dropdown from "../UIElements/Dropdown";
 import { ToastContainer } from "react-toastify";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 const MapOne = dynamic(() => import("../Maps/MapOne"), { ssr: false });
@@ -30,7 +31,6 @@ interface Item {
 }
 
 const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
-
 const CAMERA_IDS = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 
 const cards = [
@@ -50,6 +50,7 @@ function getCurrentTimestamp() {
 }
 
 const Dashboard: React.FC = () => {
+  const router = useRouter();
   const [selectedLocation, setSelectedLocation] = useState<string>("7th Street Market");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
   const [allRecords, setAllRecords] = useState<Item[]>([]);
@@ -67,20 +68,12 @@ const Dashboard: React.FC = () => {
       const results = await Promise.all(
         CAMERA_IDS.map((cam) => getHourlyData(selectedLocation, cam))
       );
-
       const valid = results.filter(Boolean) as Item[];
-      console.log(`[${selectedLocation}] valid cameras:`, valid.length);
       setAllRecords(valid);
-
-      if (valid.length === 0) {
-        setLatestRecord(null);
-        return;
-      }
-
+      if (valid.length === 0) { setLatestRecord(null); return; }
       const latest = [...valid].sort((a, b) =>
         new Date(b.Updated_Time ?? 0).getTime() - new Date(a.Updated_Time ?? 0).getTime()
       );
-
       setLatestRecord(latest[0] || null);
     } catch (error) {
       console.error("fetchData error:", error);
@@ -90,9 +83,12 @@ const Dashboard: React.FC = () => {
   };
 
   const totalPeople = allRecords.reduce(
-    (sum, r) => sum + parseInt(r.People_Count ?? "0", 10),
-    0
+    (sum, r) => sum + parseInt(r.People_Count ?? "0", 10), 0
   );
+
+  const handleCameraClick = (camId: string) => {
+    router.push(`/camera?location=${encodeURIComponent(selectedLocation)}&cam=${encodeURIComponent(camId)}`);
+  };
 
   return (
     <>
@@ -102,9 +98,7 @@ const Dashboard: React.FC = () => {
 
       <br />
 
-      {loading && (
-        <p className="text-xs text-gray-400 mb-2">Refreshing...</p>
-      )}
+      {loading && <p className="text-xs text-gray-400 mb-2">Refreshing...</p>}
 
       {!loading && allRecords.length === 0 && (
         <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
@@ -135,11 +129,7 @@ const Dashboard: React.FC = () => {
           </svg>
         </CardDataStats>
 
-        <CardDataStats
-          title="Active Cameras"
-          total={`${allRecords.length}`}
-          rate=""
-        >
+        <CardDataStats title="Active Cameras" total={`${allRecords.length}`} rate="">
           <svg className="fill-primary dark:fill-white" width="20" height="22" viewBox="0 0 20 22" xmlns="http://www.w3.org/2000/svg">
             <circle cx="10" cy="11" r="9" strokeWidth="2" />
             <circle cx="10" cy="11" r="6" />
@@ -148,18 +138,19 @@ const Dashboard: React.FC = () => {
         </CardDataStats>
       </div>
 
-      {/* Active Cameras Grid */}
-      <h5 className="mt-4 mb-2 text-lg font-semibold text-black dark:text-white">
+      {/* Active Cameras Grid — each card clickable */}
+      <h5 id="cameras" className="mt-4 mb-2 text-lg font-semibold text-black dark:text-white">
         Active Cameras
       </h5>
 
-      <div className="mt-2 grid grid-cols-5 gap-4">
+      <div className="mt-2 grid grid-cols-4 gap-4">
         {CAMERA_IDS.map((camId) => {
           const camData = allRecords.find((r) => r.Cam_ID === camId);
           return (
             <div
               key={camId}
-              className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark"
+              onClick={() => handleCameraClick(camId)}
+              className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark cursor-pointer hover:border-primary hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-sm font-medium text-gray-500">{camId}</p>
@@ -181,14 +172,24 @@ const Dashboard: React.FC = () => {
       </div>
 
       <br />
-      <h5 className="text-lg font-semibold text-black dark:text-white">Data Summary</h5>
+      <h5 id="data-summary" className="text-lg font-semibold text-black dark:text-white">Data Summary</h5>
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        <ChartOne />
-        <ChartTwo />
-        <Anomalies cards={cards} />
-        <CumulativeChartOne />
-        <ChartThree />
+        <div id="time-chart" className="col-span-12">
+          <ChartOne />
+        </div>
+        <div id="anomalies" className="col-span-12 xl:col-span-4">
+          <ChartTwo />
+        </div>
+        <div className="col-span-12 xl:col-span-4">
+          <Anomalies cards={cards} />
+        </div>
+        <div id="cumulative-people" className="col-span-12">
+          <CumulativeChartOne />
+        </div>
+        <div id="visitor-analytics" className="col-span-12">
+          <ChartThree />
+        </div>
         <div className="col-span-12 xl:col-span-8">
           <ToastContainer />
         </div>
@@ -198,4 +199,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-
