@@ -10,8 +10,12 @@ import getHourlyData from "../../hooks/getHourlyData";
 import Dropdown from "../UIElements/Dropdown";
 import { ToastContainer } from "react-toastify";
 import dynamic from "next/dynamic";
+import CameraGrid from "../Cameras/CameraGrid";
 
 const MapOne = dynamic(() => import("../Maps/MapOne"), { ssr: false });
+
+
+
 
 interface Item {
   id: string;
@@ -96,6 +100,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
+
+
       <div className="grid grid-cols-1 items-center justify-center">
         <Dropdown options={options} title="Location" onChange={setSelectedLocation} />
       </div>
@@ -149,49 +155,38 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Active Cameras Grid */}
-      <h5 className="mt-4 mb-2 text-lg font-semibold text-black dark:text-white">
-        Active Cameras
-      </h5>
-
-      <div className="mt-2 grid grid-cols-5 gap-4">
-        {CAMERA_IDS.map((camId) => {
-          const camData = allRecords.find((r) => r.Cam_ID === camId);
-          return (
-            <div
-              key={camId}
-              className="rounded-lg border border-stroke bg-white py-4 px-6 shadow-default dark:border-strokedark dark:bg-boxdark"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <p className="text-sm font-medium text-gray-500">{camId}</p>
-                <span className={`inline-block h-2 w-2 rounded-full ${camData ? "bg-green-500" : "bg-gray-400"}`} />
-              </div>
-              <svg className="fill-primary dark:fill-white mb-1" width="24" height="24" viewBox="0 0 512 512">
-                <path d="M256 106.6c20.6.1 37.3-16.6 37.3-37.3 0-20.6-16.7-37.3-37.3-37.3-20.6 0-37.3 16.7-37.3 37.3 0 20.6 16.7 37.3 37.3 37.3zM293.4 115h-74.8c-28.2 0-46.6 24.8-46.6 48.4V277c0 22 31 22 31 0V172h6v285.6c0 30.4 42 29.4 43 0V293h8v164.7c1.7 31.2 43 28.2 43-.1V172h5v105c0 22 32 22 32 0V163.4c0-23.5-18.5-48.4-46.6-48.4z" />
-              </svg>
-              <h4 className="text-xl font-bold text-black dark:text-white">
-                {camData?.People_Count || 0}
-              </h4>
-              <p className="text-xs text-gray-400">Occupants</p>
-              {camData?.Updated_Time && (
-                <p className="text-xs text-gray-300 mt-1">{camData.Updated_Time}</p>
-              )}
-            </div>
-          );
-        })}
+      <div id="cameras">
+        <CameraGrid allRecords={allRecords} selectedLocation={selectedLocation}/>
       </div>
+      
+      
 
       <br />
       <h5 className="text-lg font-semibold text-black dark:text-white">Data Summary</h5>
 
-      <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        <ChartOne />
+      <div id="time-chart" className="mt-4 grid grid-cols-1 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
+          <ChartOne />
+      </div>
+
+      <div id="anomolies" className="mt-4 grid grid-cols-9 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         <ChartTwo />
         <Anomalies cards={cards} />
+      </div>
+
+      <div id="cumulative-people" className="mt-4 grid grid-cols-1 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         <CumulativeChartOne />
+      </div>
+
+      <div id="visitor-analytics" className="mt-4 grid grid-cols-1 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         <ChartThree />
-        <div className="col-span-12 xl:col-span-8">
-          <ToastContainer />
-        </div>
+      </div>
+      
+      <div className="col-span-12 xl:col-span-8" >
+        <ToastContainer />
+      </div>
+
+      <div className="col-span-12 xl:col-span-8">
+        <ToastContainer />
       </div>
     </>
   );
