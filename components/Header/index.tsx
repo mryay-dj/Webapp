@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import DarkModeSwitcher from "./DarkModeSwitcher";
 import DropdownMessage from "./DropdownMessage";
@@ -62,19 +63,17 @@ const Header = (props: {
         </div>
 
         <div className="hidden sm:block">
-          <form action="https://formbold.com/s/unique_form_id" method="POST">
-            <div className="relative flex">
-              
-
-              <div className="flex align-center gap-12 flex gap-12 border border-gray-300 p-2 rounded-xl">
-                {["Cameras", "Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"].map((tab) => (
-                <button key={tab} className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-white">
-                  {tab}
-                </button>
-                ))}
-              </div>
+          <div className="relative flex">
+            <div className="flex align-center gap-12 flex gap-12 border border-gray-300 p-2 rounded-xl">
+              {["Cameras", "Time Chart", "Anomalies", "Cumulative People", "Visitor Analytics"].map((tab) => (
+              <button key={tab}
+              onClick={() => document.getElementById(tab.toLowerCase().replace(/\s+/g, "-"))?.scrollIntoView({ behavior: "smooth"})}
+              className="px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-white">
+                {tab}
+              </button>
+              ))}
             </div>
-          </form>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 2xsm:gap-7">
