@@ -62,8 +62,7 @@ const SignIn: React.FC = () => {
               </Link>
 
               <p className="2xl:px-20">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit
-                suspendisse.
+                Sign into Smart City!
               </p>
 
               <span className="mt-15 inline-block">

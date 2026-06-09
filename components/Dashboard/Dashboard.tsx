@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
         <CardDataStats
-          title="People"
+          title="Total Occupants"
           total={String(totalPeople)}
           rate={`${latestRecord?.Updated_Time || getCurrentTimestamp()} EST`}
         >
@@ -178,10 +178,10 @@ const Dashboard: React.FC = () => {
         <div id="time-chart" className="col-span-12">
           <ChartOne />
         </div>
-        <div id="anomalies" className="col-span-12 xl:col-span-4">
+        <div id="anomalies" className="col-span-12 xl:col-span-21">
           <ChartTwo />
         </div>
-        <div className="col-span-12 xl:col-span-4">
+        <div className="col-span-12 xl:col-span-12">
           <Anomalies cards={cards} />
         </div>
         <div id="cumulative-people" className="col-span-12">
