@@ -6,6 +6,11 @@ const LOCATION_MAP: Record<string, string> = {
   'Parking lot': 'Parking lot',
   '7th Street Market': '7_Street_Market',
   'ABC Store': 'ABC Store',
+  //new locations
+  'VAPA-Center': 'VAPA-Center',
+  'Bianco-Tower': 'Bianco-Tower',
+  'CPCC_Merancas': 'CPCC_Merancas',
+  'CPCC_Centrale': 'CPCC_Centrale',
 };
 
 const tokenCache: Record<string, string | null> = {};

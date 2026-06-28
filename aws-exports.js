@@ -13,7 +13,7 @@ const config =  {
           endpoint: 'https://zx427q6qivddlgophnz4kn652i.appsync-api.us-east-1.amazonaws.com/graphql',
           region: 'us-east-1',
           defaultAuthMode: 'apiKey',
-          apiKey: 'da2-ysry74uwubffbdu2dx3bmvfs5y'
+          apiKey: 'da2-ppqerjusm5ex7cs4dipctxfdfu'
         }
     }
 };
