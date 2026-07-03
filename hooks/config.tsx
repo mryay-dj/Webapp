@@ -1,8 +1,8 @@
 
-export const API_KEY = 'da2-ppqerjusm5ex7cs4dipctxfdfu';
+export const API_KEY = 'da2-v5wwqbdvm5albjrqbuus6r6cyq';
 export const URL = 'https://zx427q6qivddlgophnz4kn652i.appsync-api.us-east-1.amazonaws.com/graphql';
 
 export const headers = {
     'content-type': 'application/json',
-    'X-API-KEY': 'da2-ppqerjusm5ex7cs4dipctxfdfu',
+    'X-API-KEY': 'da2-v5wwqbdvm5albjrqbuus6r6cyq',
   };
