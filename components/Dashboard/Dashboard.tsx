@@ -11,6 +11,7 @@ import Dropdown from "../UIElements/Dropdown";
 import { ToastContainer } from "react-toastify";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import newUserLocations from "../../hooks/newUserLocations";
 
 const MapOne = dynamic(() => import("../Maps/MapOne"), { ssr: false });
 
@@ -30,7 +31,6 @@ interface Item {
   Updated_Time?: string;
 }
 
-const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot", "VAPA-Center", "Bianco-Tower", "CPCC_Merancas", "CPCC_Centrale"];
 const CAMERA_IDS = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 
 const cards = [
@@ -51,12 +51,22 @@ function getCurrentTimestamp() {
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
-  const [selectedLocation, setSelectedLocation] = useState<string>("7th Street Market");
+  // Pull allowed locations from Cognito attribute
+  const { allowedLocations, loading: loadingLocations } = newUserLocations();
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
   const [allRecords, setAllRecords] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Once locations load set the first one as default
   useEffect(() => {
+    if (allowedLocations.length > 0 && !selectedLocation) {
+      setSelectedLocation(allowedLocations[0]);
+    }
+  }, [allowedLocations]);
+
+  useEffect(() => {
+    if (!selectedLocation) return;
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
@@ -90,10 +100,25 @@ const Dashboard: React.FC = () => {
     router.push(`/camera?location=${encodeURIComponent(selectedLocation)}&cam=${encodeURIComponent(camId)}`);
   };
 
+  // Show loading while checking permissions
+  if (loadingLocations) {
+    return <p className="text-xs text-gray-400 p-6">Checking access...</p>;
+  }
+
+  // Show error if no locations assigned
+  if (allowedLocations.length === 0) {
+    return (
+      <div className="m-6 rounded border border-red-400 bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-900 dark:text-red-200">
+        You don't have access to any locations. Contact your administrator.
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="grid grid-cols-1 items-center justify-center">
-        <Dropdown options={options} title="Location" onChange={setSelectedLocation} />
+        {/* Only shows locations this user is allowed to see */}
+        <Dropdown options={allowedLocations} title="Location" onChange={setSelectedLocation} />
       </div>
 
       <br />
@@ -106,7 +131,6 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
         <CardDataStats
           title="Total Occupants"
@@ -138,7 +162,6 @@ const Dashboard: React.FC = () => {
         </CardDataStats>
       </div>
 
-      {/* Active Cameras Grid — each card clickable */}
       <h5 id="cameras" className="mt-4 mb-2 text-lg font-semibold text-black dark:text-white">
         Active Cameras
       </h5>
@@ -178,10 +201,10 @@ const Dashboard: React.FC = () => {
         <div id="time-chart" className="col-span-12">
           <ChartOne />
         </div>
-        <div id="anomalies" className="col-span-12 xl:col-span-21">
+        <div id="anomalies" className="col-span-12 xl:col-span-8">
           <ChartTwo />
         </div>
-        <div className="col-span-12 xl:col-span-12">
+        <div className="col-span-12 xl:col-span-4">
           <Anomalies cards={cards} />
         </div>
         <div id="cumulative-people" className="col-span-12">
