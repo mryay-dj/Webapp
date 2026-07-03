@@ -7,6 +7,11 @@ const LOCATION_MAP: Record<string, string> = {
   'CPCC': 'cpcc',
   'TeCSAR Lab': 'tecsar_lab',
   'Parking lot': 'parking_lot',
+  //new locations
+  'VAPA-Center': 'VAPA-Center',
+  'Bianco-Tower': 'Bianco-Tower',
+  'CPCC_Merancas': 'CPCC_Merancas',
+  'CPCC_Centrale': 'CPCC_Centrale',
 };
 
 const CAMERA_MAP: Record<string, string> = {

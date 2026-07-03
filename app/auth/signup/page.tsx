@@ -6,6 +6,7 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { validateAccessCode } from "@/hooks/accessCode";
 
 const SignUp: React.FC = () => {
   const router = useRouter();
@@ -13,10 +14,9 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,14 +25,28 @@ const SignUp: React.FC = () => {
       setError("Passwords do not match");
       return;
     }
+
+    // Validate access code before even trying Cognito
+    const locations = validateAccessCode(accessCode);
+    if (!locations) {
+      setError("Invalid access code. Contact your administrator.");
+      return;
+    }
+
     setLoading(true);
     setError("");
+
     try {
       await signUp({
         username: email,
         password,
         options: {
-          userAttributes: { email, name }
+          userAttributes: {
+            email,
+            name,
+            // Store as "all" or comma separated string like "7_Street_Market,VAPA-Center"
+            "custom:locations": locations === "all" ? "all" : locations.join(","),
+          }
         }
       });
       console.log("SIGNUP EMAIL:", email);
@@ -68,9 +82,7 @@ const SignUp: React.FC = () => {
                   height={32}
                 />
               </Link>
-              <p className="2xl:px-20">
-                AI powered Safe Community App
-              </p>
+              <p className="2xl:px-20">AI powered Safe Community App</p>
             </div>
           </div>
 
@@ -102,13 +114,13 @@ const SignUp: React.FC = () => {
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">Access Code</label>
                   <input
-              
-                   type="text"
-                   placeholder="Enter Access Code"
-                   required
-                   className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input"> 
-                  
-                  </input>
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    type="text"
+                    placeholder="Enter your access code"
+                    required
+                    className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary dark:border-form-strokedark dark:bg-form-input"
+                  />
                 </div>
 
                 <div className="mb-4">

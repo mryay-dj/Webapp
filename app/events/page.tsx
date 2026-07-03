@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import getS3Videos, { S3Video } from "../../hooks/getS3Videos";
 import getS3Heatmap from "../../hooks/getS3Heatmap";
 
-const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot"];
+const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot", "VAPA-Center", "Bianco-Tower", "CPCC_Merancas", "CPCC_Centrale"];
 const cameraOptions = ["All Cameras", "Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 const filterPills = ["All", "Today", "This Week", "This Month"];
 
