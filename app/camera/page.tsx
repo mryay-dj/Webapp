@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import getHourlyData from "../../hooks/getHourlyData";
 import getS3Heatmap from "../../hooks/getS3Heatmap";
 import Anomalies from "@/components/UIElements/Anamolies";
 import Dropdown from "@/components/UIElements/Dropdown";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import ChartFour from "@/components/Charts/ChartFour";
 import ChartOne from "@/components/Charts/ChartOne";
 import ChartThree from "@/components/Charts/ChartThree";
 import ChartTwo from "@/components/Charts/ChartTwo";
+import newUserLocations from "../../hooks/newUserLocations";
 
 const BirdEyeView = dynamic(() => import("@/components/Charts/BirdEyeView"), { ssr: false });
 
-const options = ["7th Street Market", "ABC Store", "CPCC", "TeCSAR Lab", "Parking lot", "VAPA-Center", "Bianco-Tower", "CPCC_Merancas", "CPCC_Centrale"];
 const cams = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5", "Camera 6", "Camera 7", "Camera 8"];
 const tabs = ["Anomalies", "Visitor Analytics"];
 
@@ -39,19 +39,35 @@ const cards = [
   { imageUrl: "/images/Anomalies/fight.png", count: 0, title: "Fight" },
 ];
 
-const Camera = () => {
+function CameraInner() {
   const router = useRouter();
-  const [selectedCamera, setSelectedCamera] = useState("Camera 1");
-  const [selectedLocation, setSelectedLocation] = useState("7th Street Market");
+  const searchParams = useSearchParams();
+  const { allowedLocations, loading: loadingLocations } = newUserLocations();
+
+  // Read camera and location directly from URL params
+  const [selectedCamera, setSelectedCamera] = useState(
+    searchParams.get("cam") || "Camera 1"
+  );
+  const [selectedLocation, setSelectedLocation] = useState(
+    searchParams.get("location") || ""
+  );
+
   const [activeTab, setActiveTab] = useState("Anomalies");
   const [latestRecord, setLatestRecord] = useState<Item | null>(null);
   const [loading, setLoading] = useState(false);
   const [showFullHeatmap, setShowFullHeatmap] = useState(false);
   const [heatmapMode, setHeatmapMode] = useState("Heat Map");
-  // heatmapUrl stores the S3 URL or null if not found
   const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
 
+  // Once allowed locations load, if no location set from URL use first allowed
+  useEffect(() => {
+    if (!selectedLocation && allowedLocations.length > 0) {
+      setSelectedLocation(allowedLocations[0]);
+    }
+  }, [allowedLocations]);
+
   const fetchData = async () => {
+    if (!selectedLocation) return;
     setLoading(true);
     try {
       const record = await getHourlyData(selectedLocation, selectedCamera);
@@ -64,18 +80,16 @@ const Camera = () => {
   };
 
   const fetchHeatmap = async () => {
-    // calls our hook which tries today then yesterday
+    if (!selectedLocation) return;
     const url = await getS3Heatmap(selectedLocation, selectedCamera);
     setHeatmapUrl(url);
-    console.log("Heatmap URL:", url);
   };
 
   useEffect(() => {
+    if (!selectedLocation) return;
     fetchData();
     fetchHeatmap();
-    // poll realtime data every 5 seconds
     const dataInterval = setInterval(fetchData, 5000);
-    // refresh heatmap every 5 minutes
     const heatmapInterval = setInterval(fetchHeatmap, 300000);
     return () => {
       clearInterval(dataInterval);
@@ -84,6 +98,10 @@ const Camera = () => {
   }, [selectedCamera, selectedLocation]);
 
   const peopleCount = parseInt(latestRecord?.People_Count ?? "0", 10);
+
+  if (loadingLocations) {
+    return <p className="text-xs text-gray-400 p-6">Checking access...</p>;
+  }
 
   return (
     <>
@@ -100,77 +118,63 @@ const Camera = () => {
               </svg>
               <span className="text-sm font-medium">{selectedCamera} : Overview</span>
             </button>
-            <select
-              value={heatmapMode}
-              onChange={(e) => setHeatmapMode(e.target.value)}
-              className="bg-white text-black rounded-lg px-4 py-2 text-sm font-medium"
-            >
-              <option>Heat Map</option>
-              <option>Dwell Times</option>
-              <option>Exit / Entry Counts</option>
-              <option>Movement Patterns</option>
-              <option>Speed & Trajectory</option>
-            </select>
+
+            <div className="flex items-center gap-4">
+              <select
+                value={heatmapMode}
+                onChange={(e) => setHeatmapMode(e.target.value)}
+                className="bg-white text-black rounded-lg px-4 py-2 text-sm font-medium"
+              >
+                <option>Heat Map</option>
+                <option>Dwell Times</option>
+                <option>Exit / Entry Counts</option>
+                <option>Movement Patterns</option>
+                <option>Speed & Trajectory</option>
+              </select>
+
+              {/* X close button */}
+              <button
+                onClick={() => setShowFullHeatmap(false)}
+                className="text-white hover:text-red-400 transition"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          {/* Full size heatmap */}
           <div className="flex-1 overflow-hidden">
             {heatmapUrl ? (
-              <img
-                src={heatmapUrl}
-                alt="heatmap"
-                className="w-full h-full object-contain bg-black"
-              />
+              <img src={heatmapUrl} alt="heatmap" className="w-full h-full object-contain bg-black" />
             ) : (
-              <div className="w-full h-full relative">
-                <img
-                  src="/images/heatmap-placeholder.png"
-                  alt="heatmap placeholder"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-black bg-opacity-60 rounded-xl px-8 py-4 text-center">
-                    <p className="text-white font-medium">No heatmap available today</p>
-                    <p className="text-gray-400 text-sm mt-1">
-                      {selectedLocation} — {selectedCamera}
-                    </p>
-                  </div>
+              <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                <div className="text-center">
+                  <p className="text-white font-medium">No heatmap available</p>
+                  <p className="text-gray-400 text-sm mt-1">{selectedLocation} — {selectedCamera}</p>
+                  <p className="text-gray-500 text-xs mt-1">Try Camera 8 for latest data</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Timeline scrubber */}
           <div className="bg-boxdark border-t border-strokedark px-6 py-4">
             <div className="flex items-center gap-4 mb-3">
-              <button className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium">
-                Static
-              </button>
+              <button className="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-medium">Static</button>
               <div className="flex-1 flex justify-center items-center gap-4">
                 <button className="text-gray-400 hover:text-white">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
-                  </svg>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" /></svg>
                 </button>
                 <button className="bg-primary w-8 h-8 rounded flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                  </svg>
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
                 </button>
                 <button className="text-gray-400 hover:text-white">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-                  </svg>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
                 </button>
               </div>
               <div className="flex gap-2">
                 {["24 hr", "12 hr", "6 hr"].map((t) => (
-                  <button
-                    key={t}
-                    className="text-white text-sm px-3 py-1.5 rounded-lg border border-strokedark hover:border-primary hover:text-primary transition"
-                  >
-                    {t}
-                  </button>
+                  <button key={t} className="text-white text-sm px-3 py-1.5 rounded-lg border border-strokedark hover:border-primary hover:text-primary transition">{t}</button>
                 ))}
               </div>
             </div>
@@ -200,18 +204,35 @@ const Camera = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <Dropdown options={options} title="Location" onChange={setSelectedLocation} />
-        <Dropdown options={cams} title="Camera" onChange={setSelectedCamera} />
+      {/* Page title shows which camera you're viewing */}
+      <div className="flex items-center gap-4 mb-6">
+        <h2 className="text-xl font-medium text-black dark:text-white whitespace-nowrap">
+          {selectedCamera} : Overview
+        </h2>
+        <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
       </div>
 
-      {!loading && !latestRecord && (
+      {/* Dropdowns — location uses allowedLocations only */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <Dropdown
+          options={allowedLocations.length > 0 ? allowedLocations : []}
+          title="Location"
+          onChange={setSelectedLocation}
+        />
+        <Dropdown
+          options={cams}
+          title="Camera"
+          onChange={setSelectedCamera}
+        />
+      </div>
+
+      {!loading && !latestRecord && selectedLocation && (
         <div className="mb-4 rounded border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
           No data for <strong>{selectedLocation}</strong> — <strong>{selectedCamera}</strong>
         </div>
       )}
 
-      {/* TOP ROW — Overview + Heatmap preview */}
+      {/* TOP ROW */}
       <div className="grid grid-cols-12 gap-4 mb-6">
         <div className="col-span-12 xl:col-span-7">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 h-full">
@@ -245,22 +266,23 @@ const Camera = () => {
           </div>
         </div>
 
-        {/* Heatmap preview — click to open full modal */}
         <div className="col-span-12 xl:col-span-5">
           <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4 h-full">
-            <h3 className="text-base font-medium text-black dark:text-white mb-2">
-              View Heatmap
-            </h3>
+            <h3 className="text-base font-medium text-black dark:text-white mb-2">View Heatmap</h3>
             <div
               className="relative rounded-lg overflow-hidden cursor-pointer"
               style={{ height: "150px" }}
               onClick={() => setShowFullHeatmap(true)}
             >
-              <img
-                src={heatmapUrl ?? ""}
-                alt="heatmap preview"
-                className="w-full h-full object-cover"
-              />
+              {heatmapUrl ? (
+                <img src={heatmapUrl} alt="heatmap preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-meta-4 flex items-center justify-center rounded-lg">
+                  <p className="text-gray-400 text-xs text-center px-4">
+                    No heatmap available<br />Try Camera 8
+                  </p>
+                </div>
+              )}
               <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-40 py-2 flex justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -271,29 +293,21 @@ const Camera = () => {
         </div>
       </div>
 
-      {/* CAMERA DATA */}
       <div className="flex items-center gap-4 mb-4">
         <h3 className="text-sm font-medium text-black dark:text-white">Camera Data</h3>
         <div className="flex-1 h-px bg-stroke dark:bg-strokedark" />
       </div>
 
-      {/* Cumulative People — always visible */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
-        <h4 className="text-base font-medium text-black dark:text-white mb-4">
-          Cumulative People
-        </h4>
+        <h4 className="text-base font-medium text-black dark:text-white mb-4">Cumulative People</h4>
         <ChartOne />
       </div>
 
-      {/* Time Chart — always visible */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-6 mb-6">
-        <h4 className="text-base font-medium text-black dark:text-white mb-4">
-          Time Chart
-        </h4>
+        <h4 className="text-base font-medium text-black dark:text-white mb-4">Time Chart</h4>
         <ChartFour />
       </div>
 
-      {/* Anomalies + Visitor Analytics tabs */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex border-b border-stroke dark:border-strokedark px-2">
           {tabs.map((tab) => (
@@ -313,12 +327,8 @@ const Camera = () => {
         <div className="p-6">
           {activeTab === "Anomalies" && (
             <div className="grid grid-cols-12 gap-4">
-              <div className="col-span-12 xl:col-span-8">
-                <ChartTwo />
-              </div>
-              <div className="col-span-12 xl:col-span-4">
-                <Anomalies cards={cards} />
-              </div>
+              <div className="col-span-12 xl:col-span-8"><ChartTwo /></div>
+              <div className="col-span-12 xl:col-span-4"><Anomalies cards={cards} /></div>
             </div>
           )}
           {activeTab === "Visitor Analytics" && <ChartThree />}
@@ -326,6 +336,12 @@ const Camera = () => {
       </div>
     </>
   );
-};
+}
 
-export default Camera;
+export default function Camera() {
+  return (
+    <Suspense fallback={<div className="p-6 text-gray-400">Loading...</div>}>
+      <CameraInner />
+    </Suspense>
+  );
+}
