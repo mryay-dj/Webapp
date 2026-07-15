@@ -19,7 +19,11 @@ const Events = () => {
   const [loadingVideos, setLoadingVideos] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<S3Video | null>(null);
   const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
+  const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null); 
+
+
+  const sampleRecordings = [];
+  
 
   // Fetch videos when location changes
   useEffect(() => {

@@ -35,7 +35,7 @@ const cards = [
   { imageUrl: "/images/Anomalies/bag.png", count: 0, title: "Bag Left" },
   { imageUrl: "/images/Anomalies/literring.png", count: 0, title: "Littering" },
   { imageUrl: "/images/Anomalies/slip.png", count: 0, title: "Slip" },
-  { imageUrl: "/images/Anomalies/grunning.png", count: 1, title: "Group Running" },
+  { imageUrl: "/images/Anomalies/grunning.png", count: 0, title: "Group Running" },
   { imageUrl: "/images/Anomalies/fight.png", count: 0, title: "Fight" },
 ];
 
