@@ -200,10 +200,10 @@ const Dashboard: React.FC = () => {
         <div id="time-chart" className="col-span-12">
           <ChartOne />
         </div>
-        <div id="anomalies" className="col-span-12 xl:col-span-8">
+        <div id="anomalies" className="col-span-12 xl:col-span-12">
           <ChartTwo />
         </div>
-        <div className="col-span-12 xl:col-span-4">
+        <div className="col-span-15 xl:col-span-12">
           <Anomalies cards={cards} />
         </div>
         <div id="cumulative-people" className="col-span-12">

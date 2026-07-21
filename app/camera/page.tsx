@@ -326,9 +326,9 @@ function CameraInner() {
         </div>
         <div className="p-6">
           {activeTab === "Anomalies" && (
-            <div className="grid grid-cols-12 gap-4">
+            <div className="grid grid-cols-15 gap-3">
               <div className="col-span-12 xl:col-span-8"><ChartTwo /></div>
-              <div className="col-span-12 xl:col-span-4"><Anomalies cards={cards} /></div>
+              <div className="col-span-12 xl:col-span-8"><Anomalies cards={cards} /></div>
             </div>
           )}
           {activeTab === "Visitor Analytics" && <ChartThree />}

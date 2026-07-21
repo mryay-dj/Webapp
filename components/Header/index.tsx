@@ -32,7 +32,7 @@ const Header = (props: {
 
   return (
     <header className="sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
-      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-15">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
           <button
             aria-controls="sidebar"
@@ -59,8 +59,8 @@ const Header = (props: {
           </Link>
         </div>
 
-        <div className="hidden sm:block">
-          <div className="flex items-center gap-2 border border-gray-300 dark:border-strokedark p-2 rounded-xl">
+        <div className="hidden sm:block mx-auto">
+          <div className="flex items-center gap-2 border border-gray===-300 dark:border-strokedark p-2 rounded-xl">
             {NAV_TABS.map((tab) => (
               <button
                 key={tab.id}
