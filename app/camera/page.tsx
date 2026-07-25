@@ -223,6 +223,7 @@ function CameraInner() {
           options={cams}
           title="Camera"
           onChange={setSelectedCamera}
+          value={selectedCamera}
         />
       </div>
 

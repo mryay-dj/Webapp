@@ -96,6 +96,11 @@ const Dashboard: React.FC = () => {
     (sum, r) => sum + parseInt(r.People_Count ?? "0", 10), 0
   );
 
+  const totalAnomalies = allRecords.reduce((max, r) => {
+    const count = parseInt(r.Cumulative_Anomalies ?? "0", 10);
+    return count > max ? count : max;
+  }, 0);
+
   const handleCameraClick = (camId: string) => {
     router.push(`/camera?location=${encodeURIComponent(selectedLocation)}&cam=${encodeURIComponent(camId)}`);
   };
@@ -144,7 +149,7 @@ const Dashboard: React.FC = () => {
 
         <CardDataStats
           title="Anomalies"
-          total={`${latestRecord?.Cumulative_Anomalies || "0"}`}
+          total={String(totalAnomalies)}
           rate="N/A"
         >
           <svg className="fill-primary dark:fill-white" width="35" height="35" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
