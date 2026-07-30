@@ -217,13 +217,14 @@ function CameraInner() {
         <Dropdown
           options={allowedLocations.length > 0 ? allowedLocations : []}
           title="Location"
+          value={selectedLocation}
           onChange={setSelectedLocation}
         />
         <Dropdown
           options={cams}
           title="Camera"
-          onChange={setSelectedCamera}
           value={selectedCamera}
+          onChange={setSelectedCamera}
         />
       </div>
 

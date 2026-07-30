@@ -123,7 +123,7 @@ const Dashboard: React.FC = () => {
     <>
       <div className="grid grid-cols-1 items-center justify-center">
         {/* Only shows locations this user is allowed to see */}
-        <Dropdown options={allowedLocations} title="Location" onChange={setSelectedLocation} />
+        <Dropdown options={allowedLocations} title="Location" value={selectedLocation} onChange={setSelectedLocation} />
       </div>
 
       <br />

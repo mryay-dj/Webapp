@@ -1,20 +1,16 @@
 "use client";
-import React, {useState} from 'react';
+import React from 'react';
 
 interface DropDownProps {
   options: string[];
   title: string;
+  value: string;
   onChange: (selectedValue: string) => void;
 }
 
-const Dropdown: React.FC<DropDownProps> = ({ options, title, onChange }) => {
-  const [selectedValue, setSelectedValue] = useState<string>(options[0]);
-
+const Dropdown: React.FC<DropDownProps> = ({ options, title, value, onChange }) => {
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newValue = event.target.value;
-    console.log(newValue)
-    setSelectedValue(newValue);
-    onChange(newValue);
+    onChange(event.target.value);
   };
   return (
     <div>
@@ -83,7 +79,7 @@ const Dropdown: React.FC<DropDownProps> = ({ options, title, onChange }) => {
         <select
         className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent py-3 px-12 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input"
         onChange={handleSelectChange}
-        value={selectedValue}
+        value={value}
       >
         {options.map((option, index) => (
           <option key={index} value={option}>
