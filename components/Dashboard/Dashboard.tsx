@@ -12,6 +12,11 @@ import { ToastContainer } from "react-toastify";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import newUserLocations from "../../hooks/newUserLocations";
+import getTimeSeriesData, { TimeSeriesItem } from "../../hooks/getTimeSeriesData"; //import new hook 
+
+
+const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesItem[]>([]); // holds full list of records of charts
+
 
 const MapOne = dynamic(() => import("../Maps/MapOne"), { ssr: false });
 
@@ -203,7 +208,7 @@ const Dashboard: React.FC = () => {
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         <div id="time-chart" className="col-span-12">
-          <ChartOne />
+          <ChartOne location={selectedLocation} />
         </div>
         <div id="anomalies" className="col-span-12 xl:col-span-12">
           <ChartTwo />
